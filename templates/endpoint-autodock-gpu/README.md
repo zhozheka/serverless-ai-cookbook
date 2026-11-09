@@ -159,6 +159,9 @@ semantics, requested runs/evaluations, and best estimated binding energy for eac
 ligand. Artifacts include DLG/XML output, score CSV, input copies, summary, logs,
 and SHA-256 values. See [validation results](./VALIDATION.md) for the current image and live REST/MCP tests.
 
+On the GPU, `seed` does not make scores bit-identical: three seed-17 runs of the smoke gave
+best scores of -8.17, -8.27, and -8.26 kcal/mol, so treat ~0.1 kcal/mol repeat differences as noise.
+
 Docking scores are research heuristics, not experimental binding free energies.
 Validate molecule preparation, grids, parameters, poses, and conclusions
 independently.

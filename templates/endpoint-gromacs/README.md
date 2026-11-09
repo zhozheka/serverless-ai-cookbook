@@ -104,18 +104,78 @@ until curl -sf -H "Authorization: Bearer $TOKEN" \
   "$BASE_URL/v1/health/ready" >/dev/null; do echo 'waiting for GROMACS…'; sleep 15; done
 ```
 
-Submit the guided argon GPU smoke through REST:
+Build the argon GPU smoke: 256 Lennard-Jones argon atoms on an FCC lattice at
+liquid density (~17.5 atoms/nm³), 10 ps with a 120 K v-rescale thermostat. This
+is the same system that the wrapper uses as its guided default when no files are
+sent; the request sends it explicitly so that the check does not depend on that
+default (see the note below):
+
+```bash
+python3 - > argon-smoke.json <<'EOF'
+import json
+cells, a = 4, 0.611  # 4 x 4 x 4 FCC cells, lattice constant in nm
+basis = [(0, 0, 0), (0.5, 0.5, 0), (0.5, 0, 0.5), (0, 0.5, 0.5)]
+sites = [(i + x, j + y, k + z) for i in range(cells) for j in range(cells)
+         for k in range(cells) for x, y, z in basis]
+gro = ["Argon FCC smoke system", f"{len(sites):5d}"]
+gro += [f"{n:5d}ARG     AR{n:5d}" + "".join(f"{c * a:8.3f}" for c in site)
+        for n, site in enumerate(sites, start=1)]
+gro.append(f"{cells * a:10.5f}" * 3)
+# sigma (nm) / epsilon (kJ/mol) parameters, so combination rule 2.
+top = f"""[ defaults ]
+1 2 no 1.0 1.0
+[ atomtypes ]
+Ar 18 39.948 0.0 A 0.3405 0.996
+[ moleculetype ]
+ARG 1
+[ atoms ]
+1 Ar 1 ARG AR 1 0.0 39.948
+[ system ]
+Argon smoke system
+[ molecules ]
+ARG {len(sites)}
+"""
+mdp = """integrator = md
+nsteps = 10000
+dt = 0.001000
+cutoff-scheme = Verlet
+nstlist = 10
+rcoulomb = 0.8
+rvdw = 0.8
+coulombtype = Cut-off
+vdwtype = Cut-off
+pbc = xyz
+constraints = none
+tcoupl = v-rescale
+tc-grps = System
+tau-t = 0.1
+ref-t = 120.000
+pcoupl = no
+gen_vel = yes
+gen_temp = 120.000
+gen_seed = 17
+nstxout = 0
+nstvout = 0
+nstenergy = 10
+nstlog = 10
+"""
+print(json.dumps({
+    "input": {"steps": 10000, "gpu_mode": "gpu", "threads": 1,
+              "coordinate_gro": "\n".join(gro) + "\n", "topology_top": top, "mdp": mdp},
+    "client_request_id": "gromacs-first-run",
+    "research_use_acknowledgement": True,
+}))
+EOF
+```
+
+Submit it through REST and wait for a terminal state:
 
 ```bash
 RUN_ID="$({
   curl -sS -X POST "$BASE_URL/v1/runs" \
     -H "Authorization: Bearer $TOKEN" \
     -H 'Content-Type: application/json' \
-    -d '{
-      "input": {"steps": 10000, "gpu_mode": "gpu", "threads": 1},
-      "client_request_id": "gromacs-first-run",
-      "research_use_acknowledgement": true
-    }'
+    -d @argon-smoke.json
 } | python3 -c 'import json,sys; print(json.load(sys.stdin)["run_id"])')"
 
 while :; do
@@ -127,6 +187,36 @@ while :; do
   sleep 2
 done
 ```
+
+Check that the dynamics are physically sane, not only that `mdrun` finished. The
+GROMACS log reports the average temperature and the drift of the conserved energy:
+
+```bash
+curl -sS -H "Authorization: Bearer $TOKEN" \
+  "$BASE_URL/v1/runs/$RUN_ID/artifacts/run.log" -o run.log
+python3 - <<'EOF'
+import re
+log = open("run.log").read()
+rows = log.split("A V E R A G E S")[1].split("Energies (kJ/mol)")[1].split("\n\n")[0].splitlines()[1:]
+averages = {}
+for names, numbers in zip(rows[0::2], rows[1::2]):
+    for i in range(0, len(names), 15):
+        averages[names[i:i + 15].strip()] = float(numbers[i:i + 15])
+drift = float(re.search(r"Conserved energy drift: (\S+)", log).group(1))
+print(f"average T {averages['Temperature']:.1f} K; conserved-energy drift {drift:.1e} kJ/mol/ps per atom")
+assert abs(averages["Temperature"] - 120) < 10 and abs(drift) < 1e-2, "argon smoke is not physically sane"
+EOF
+```
+
+> **Published image note:** the guided default inside the published image
+> (`cb21@sha256:c291e308…`, used when `input` has no `.gro`/topology/`.mdp`) is an
+> older four-atom system whose topology gives σ/ε values under combination rule 1
+> (C6/C12). It runs, but the system explodes (temperature reaches about 9×10⁵ K;
+> conserved-energy drift 5.5×10² kJ/mol/ps per atom), so do not use it as a physical check. This directory's
+> `app.py` contains the corrected system above; the published digest keeps the old
+> default until the image is rebuilt and the digest in this README is updated. The
+> startup probe and `scripts/test_endpoint.py` use the guided default only as a
+> mechanical GPU check.
 
 For one end-to-end check of both protocols, use the included client. It submits a
 real GPU run through REST, another through MCP, downloads and hashes each result,
@@ -163,6 +253,11 @@ A successful run reaches `status: succeeded`, reports `gpu_selected: true`, and
 includes the installed GROMACS version, wall-clock time,
 and `ns_per_day`. Its artifact list includes the TPR, coordinates, energy,
 checkpoint, GROMACS log, command logs, and `result.json`, each with a SHA-256 hash.
+
+`ns_per_day` alone does not show that the dynamics are sane. For the argon smoke,
+the log check above must print an average temperature within a few kelvin of
+120 K and a conserved-energy drift of order 10⁻⁴ kJ/mol/ps per atom or smaller.
+An exploding system can still finish with `status: succeeded` and a high `ns_per_day`.
 
 See [validation results](./VALIDATION.md) for the tested image and workloads.
 

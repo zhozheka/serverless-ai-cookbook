@@ -26,7 +26,26 @@ def bounded_int(payload: dict[str, Any], name: str, default: int, low: int, high
     return value
 
 
+ARGON_FCC_CELLS = 4  # 4 x 4 x 4 FCC unit cells = 256 atoms
+ARGON_FCC_CELL_NM = 0.611  # ~17.5 atoms/nm^3, liquid argon near 120 K
+
+
+def argon_gro() -> str:
+    basis = ((0.0, 0.0, 0.0), (0.5, 0.5, 0.0), (0.5, 0.0, 0.5), (0.0, 0.5, 0.5))
+    cells = range(ARGON_FCC_CELLS)
+    sites = [(i + bx, j + by, k + bz) for i in cells for j in cells for k in cells for bx, by, bz in basis]
+    lines = ["Argon FCC smoke system", f"{len(sites):5d}"]
+    for index, site in enumerate(sites, start=1):
+        x, y, z = (value * ARGON_FCC_CELL_NM for value in site)
+        lines.append(f"{index:5d}ARG     AR{index:5d}{x:8.3f}{y:8.3f}{z:8.3f}")
+    box = ARGON_FCC_CELLS * ARGON_FCC_CELL_NM
+    lines.append(f"{box:10.5f}{box:10.5f}{box:10.5f}")
+    return "\n".join(lines) + "\n"
+
+
 def default_inputs(steps: int, timestep_ps: float, temperature_k: float, seed: int) -> dict[str, str]:
+    # Lennard-Jones argon (sigma 0.3405 nm, epsilon 0.996 kJ/mol, comb-rule 2) on an FCC
+    # lattice in a 2.444 nm box: half the box exceeds the 0.8 nm cutoffs plus pair-list buffer.
     return {
         "mdp": f"""integrator = md
 nsteps = {steps}
@@ -39,7 +58,10 @@ coulombtype = Cut-off
 vdwtype = Cut-off
 pbc = xyz
 constraints = none
-tcoupl = no
+tcoupl = v-rescale
+tc-grps = System
+tau-t = 0.1
+ref-t = {temperature_k:.3f}
 pcoupl = no
 gen_vel = yes
 gen_temp = {temperature_k:.3f}
@@ -49,16 +71,9 @@ nstvout = 0
 nstenergy = 10
 nstlog = 10
 """,
-        "gro": """Argon four-particle smoke system
-    4
-    1ARG     AR    1   0.000   0.000   0.000
-    1ARG     AR    2   0.500   0.000   0.000
-    1ARG     AR    3   0.000   0.500   0.000
-    1ARG     AR    4   0.000   0.000   0.500
-   2.00000   2.00000   2.00000
-""",
+        "gro": argon_gro(),
         "top": """[ defaults ]
-1 1 no 1.0 1.0
+1 2 no 1.0 1.0
 [ atomtypes ]
 Ar 18 39.948 0.0 A 0.3405 0.996
 [ moleculetype ]
@@ -68,7 +83,7 @@ ARG 1
 [ system ]
 Argon smoke system
 [ molecules ]
-ARG 4
+ARG 256
 """,
     }
 
