@@ -107,15 +107,6 @@ RUN_ID="$({
     }'
 } | python3 -c 'import json,sys; print(json.load(sys.stdin)["run_id"])')"
 
-while :; do
-  STATUS="$(curl -sS -H "Authorization: Bearer $TOKEN" \
-    "$BASE_URL/v1/runs/$RUN_ID" \
-    | python3 -c 'import json,sys; print(json.load(sys.stdin)["status"])')"
-  echo "$STATUS"
-  case "$STATUS" in succeeded|failed|cancelled) break;; esac
-  sleep 2
-done
-
 curl -sS -H "Authorization: Bearer $TOKEN" "$BASE_URL/v1/runs/$RUN_ID" \
   | python3 -m json.tool
 ```
