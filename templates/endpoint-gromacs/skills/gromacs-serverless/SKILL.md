@@ -38,6 +38,8 @@ Use exactly one of these modes:
    such as `steps`, `gpu_mode`, and `threads`. Use this only to validate the
    endpoint, compiled CUDA engine, GPU offload, and persistence. It is not a research
    protocol and its throughput does not predict biomolecular performance.
+   The guided default in the currently published image is a known-broken argon
+   system (it heats to ~10⁵–10⁶ K); do not interpret its energies or temperature.
 2. **Prepared TPR:** supply `tpr_base64`. Prefer this for a reviewed,
    reproducible research setup. Check that the TPR is compatible with the live
    GROMACS version. Set `steps` to the intended bounded run length because the
