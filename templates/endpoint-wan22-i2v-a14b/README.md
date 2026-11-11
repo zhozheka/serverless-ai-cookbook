@@ -8,7 +8,7 @@
 
 <!-- factory:intro -->
 
-Wan2.2-I2V-A14B is a flagship Apache-2.0 image-to-video model (~35GB) for 480p clips on preemptible H100 via vLLM-Omni.
+Wan2.2-I2V-A14B is a flagship Apache-2.0 image-to-video model (~126 GB of weights) for 480p clips on preemptible H100 via vLLM-Omni.
 
 **License:** [Apache-2.0](https://huggingface.co/Wan-AI/Wan2.2-I2V-A14B-Diffusers) · **Source:** [Hugging Face](https://huggingface.co/Wan-AI/Wan2.2-I2V-A14B-Diffusers)
 
