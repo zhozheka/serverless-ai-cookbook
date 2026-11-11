@@ -153,8 +153,12 @@ def write_once(path, text):
 def main():
     out = OUTPUT_DIR / RUN_ID
     out.mkdir(parents=True, exist_ok=True)
+    try:
+        clips = load_clips()
+    except (OSError, ValueError) as e:  # a restart would fail the same way, so end the job instead
+        log(f"FAILED to read prompts {PROMPTS}: {e}")
+        return
     wait_for_server()
-    clips = load_clips()
     todo = [c for c in clips if not (out / f"{c['id']}.mp4").exists()]
     if len(todo) < len(clips):
         log(f"resuming: {len(clips) - len(todo)} clips already rendered in {out}")
@@ -206,7 +210,8 @@ def main():
                "elapsed_seconds": round(elapsed), "output": str(out), "model": MODEL, "defaults": DEFAULTS}
     write_once(out / "summary.json", json.dumps(summary, indent=2))
     log(f"done: {done} rendered this run, {len(records)} total, {len(failed)} failed, {elapsed/60:.1f} min → {out}")
-    sys.exit(1 if failed else 0)
+    # Exit 0 even with failed clips: they would fail again, and `--restart-policy on-failure`
+    # would retry until --timeout. Preemption still restarts the job (it never gets here).
 
 
 if __name__ == "__main__":
