@@ -12,7 +12,7 @@ difficulty: intermediate
 
 <!-- factory:deploy -->
 
-<a href="https://console.nebius.com/serverless/endpoint/create?image=cr.eu-north1.nebius.cloud%2Fe00gw2b7v3pxetvpy7%2Facestep-serve%3Ad315ae1&amp;targetPort=8000&amp;platform=gpu-h100-sxm&amp;preset=1gpu-16vcpu-200gb&amp;diskSize=500GiB&amp;preemptible=true&amp;auth=true"><img src="../assets/create-endpoint.svg" alt="Create Endpoint" width="138" height="20"></a>
+<a href="https://console.nebius.com/serverless/endpoint/create?image=cr.eu-north1.nebius.cloud%2Fe00gw2b7v3pxetvpy7%2Facestep-serve%40sha256%3Af6adb242e5bd8883d7f5e6e861302b75386b33543697cf84a86c641fb535aeb7&amp;targetPort=8000&amp;platform=gpu-h100-sxm&amp;preset=1gpu-16vcpu-200gb&amp;diskSize=500GiB&amp;preemptible=true&amp;auth=true"><img src="../assets/create-endpoint.svg" alt="Create Endpoint" width="138" height="20"></a>
 
 <!-- /factory:deploy -->
 
@@ -179,7 +179,7 @@ creation and cannot be recovered later (recreate the endpoint to rotate it) — 
 
 ```bash
 nebius ai endpoint create \
-  --image cr.eu-north1.nebius.cloud/e00gw2b7v3pxetvpy7/acestep-serve:d315ae1 \
+  --image cr.eu-north1.nebius.cloud/e00gw2b7v3pxetvpy7/acestep-serve@sha256:f6adb242e5bd8883d7f5e6e861302b75386b33543697cf84a86c641fb535aeb7 \
   --public \
   --auth token \
   --platform gpu-h100-sxm \
@@ -211,4 +211,4 @@ nebius ai endpoint create \
 | `502 failed to connect to local service`       | Tunnel up but port 8000 not bound yet — poll `/v1/models`; RUNNING ≠ API ready                                                                    |
 | Slow first pull                                | Add optional `HF_TOKEN`; disk throughput scales with size — template asks for 500 Gi                                                              |
 | `shm` errors in worker logs                    | Request `--shm-size 16Gi` (set in deploy configuration)                                                                                           |
-| Wrong image or port                            | `cr.eu-north1.nebius.cloud/e00gw2b7v3pxetvpy7/acestep-serve:d315ae1` on container port `8000` (`gpu-h100-sxm` / `1gpu-16vcpu-200gb`, preemptible) |
+| Wrong image or port                            | `cr.eu-north1.nebius.cloud/e00gw2b7v3pxetvpy7/acestep-serve@sha256:f6adb242e5bd8883d7f5e6e861302b75386b33543697cf84a86c641fb535aeb7` on container port `8000` (`gpu-h100-sxm` / `1gpu-16vcpu-200gb`, preemptible) |
