@@ -106,8 +106,10 @@ JOB=$(curl -sS -X POST "$BASE_URL/v1/videos" "${AUTH[@]}" -H "Accept: applicatio
   | python3 -c 'import sys,json; print(json.load(sys.stdin)["id"])')
 echo "job $JOB"
 
-until [ "$(curl -sS "${AUTH[@]}" "$BASE_URL/v1/videos/$JOB" | python3 -c 'import sys,json; print(json.load(sys.stdin)["status"])')" = "completed" ]; do sleep 10; done
-curl -sS -L "${AUTH[@]}" "$BASE_URL/v1/videos/$JOB/content" -o cosmos3_t2v.mp4
+until STATUS=$(curl -sS "${AUTH[@]}" "$BASE_URL/v1/videos/$JOB" | python3 -c 'import sys,json; print(json.load(sys.stdin)["status"])' 2>/dev/null || echo failed)
+  [ "$STATUS" = completed ] || [ "$STATUS" = failed ]; do sleep 10; done
+echo "status $STATUS"
+[ "$STATUS" = completed ] && curl -sS -L "${AUTH[@]}" "$BASE_URL/v1/videos/$JOB/content" -o cosmos3_t2v.mp4 &&
 echo "wrote cosmos3_t2v.mp4 ($(wc -c < cosmos3_t2v.mp4 | tr -d ' ') bytes)"
 ```
 
