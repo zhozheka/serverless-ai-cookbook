@@ -32,7 +32,7 @@ RUN apt-get update \
       "https://raw.githubusercontent.com/ccsb-scripps/AutoDock-Vina/${VINA_COMMIT}/example/basic_docking/solution/1iep_ligand.pdbqt" \
       --output /opt/hcls/examples/vina/1iep_ligand.pdbqt
 COPY hcls_api /app/hcls_api
-COPY app.py /app/app.py
+COPY app.py vina_dock.py /app/
 WORKDIR /app
 ENV PATH=/opt/hcls/bin:${PATH} PYTHONPATH=/app
 EXPOSE 8000

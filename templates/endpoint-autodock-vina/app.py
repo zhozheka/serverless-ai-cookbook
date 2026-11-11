@@ -4,10 +4,13 @@ import csv
 import importlib.metadata
 import json
 import math
+import multiprocessing
 import os
+from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 from typing import Any
 
+import vina_dock
 from hcls_api import create_app
 
 
@@ -92,13 +95,11 @@ class VinaAdapter:
         receptor = self.structure(payload, "receptor_pdbqt", "1iep_receptor.pdbqt", work_dir / "receptor.pdbqt")
         ligand = self.structure(payload, "ligand_pdbqt", "1iep_ligand.pdbqt", work_dir / "ligand.pdbqt")
         output = work_dir / "poses.pdbqt"
-        vina = self.vina_class(sf_name="vina", cpu=cpu, seed=seed, verbosity=1)
-        vina.set_receptor(str(receptor))
-        vina.set_ligand_from_file(str(ligand))
-        vina.compute_vina_maps(center=center, box_size=size)
-        vina.dock(exhaustiveness=exhaustiveness, n_poses=n_poses)
-        vina.write_poses(str(output), n_poses=n_poses, overwrite=True)
-        energies = vina.energies(n_poses=n_poses).tolist()
+        # Dock in a child process: Vina holds the GIL, which would stall the API (503s) for the whole run.
+        with ProcessPoolExecutor(max_workers=1, mp_context=multiprocessing.get_context("spawn")) as pool:
+            energies = pool.submit(
+                vina_dock.dock, str(receptor), str(ligand), str(output), center, size, exhaustiveness, n_poses, cpu, seed
+            ).result()
         with (work_dir / "scores.csv").open("w", encoding="utf-8", newline="") as handle:
             writer = csv.writer(handle)
             writer.writerow(

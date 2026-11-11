@@ -137,7 +137,7 @@ binding site or prepare PDB, SDF, MOL2, or SMILES files.
 | `center` | custom input | `[x, y, z]` center of the docking box. |
 | `size` | custom input | `[x, y, z]` box dimensions; each value is 1 to 60 Å. |
 | `exhaustiveness` | no | Search effort: default 8, maximum 64. |
-| `n_poses` | no | Number of poses: default 9, maximum 20. |
+| `n_poses` | no | Maximum number of poses: default 9, maximum 20. Only poses within 3 kcal/mol of the best are returned, so there can be fewer. |
 | `cpu` | no | CPU threads: default automatic, maximum 32. |
 | `seed` | no | Random seed: default 17. |
 
