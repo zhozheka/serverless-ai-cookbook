@@ -208,10 +208,10 @@ Choose one volume value before creating the endpoint:
 # Shared Filesystem
 export GROMACS_VOLUME='computefilesystem-<id>:/mnt/hcls:rw'
 
-# Or Object Storage. Configure the local AWS profile for the bucket region and
-# endpoint; the selected MysteryBox version contains S3_ACCESS_KEY_ID and
-# S3_SECRET_ACCESS_KEY for the Serverless mount.
-export GROMACS_VOLUME='s3://<bucket>:/mnt/hcls:rw:<aws-profile>@<secret-selector>'
+# Or Object Storage (uncomment instead of the line above). Configure the local AWS
+# profile for the bucket region and endpoint; the selected MysteryBox version
+# contains S3_ACCESS_KEY_ID and S3_SECRET_ACCESS_KEY for the Serverless mount.
+# export GROMACS_VOLUME='s3://<bucket>:/mnt/hcls:rw:<aws-profile>@<secret-selector>'
 ```
 
 Then create the same service from the CLI:
