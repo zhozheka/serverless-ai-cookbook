@@ -127,6 +127,9 @@ RUN_ID="$({
 } | python3 -c 'import json,sys; print(json.load(sys.stdin)["run_id"])')"
 ```
 
+GPU runs are not bit-reproducible: the same `seed` can give best scores ~0.1 kcal/mol
+apart (seed 17 gave -8.17 and -8.26).
+
 Test both interfaces and artifact interoperability:
 
 ```bash
