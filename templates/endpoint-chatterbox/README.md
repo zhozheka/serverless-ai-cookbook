@@ -1,3 +1,13 @@
+---
+title: Chatterbox
+category: inference
+type: endpoint
+runtime: gpu-h100-sxm
+frameworks: [chatterbox-tts]
+keywords: [tts, text-to-speech, voice-clone, chatterbox, openai-speech, h100]
+difficulty: intermediate
+---
+
 # Chatterbox
 
 <!-- factory:deploy -->
@@ -14,18 +24,6 @@ Chatterbox is a MIT expressive English TTS model with bundled preset voices and 
 
 <!-- /factory:intro -->
 
----
-
-title: Chatterbox
-category: inference
-type: endpoint
-runtime: gpu-h100-sxm
-frameworks: [chatterbox-tts]
-keywords: [tts, text-to-speech, voice-clone, chatterbox, openai-speech, h100]
-difficulty: intermediate
-
----
-
 Expressive English text-to-speech endpoint serving [Chatterbox](https://huggingface.co/ResembleAI/chatterbox)
 (Resemble AI) on a single preemptible H100. ~500M parameters, MIT license, and an
 OpenAI-shaped speech API on port 8000.
@@ -36,14 +34,7 @@ from bundled preset reference clips.
 
 ## Run
 
-Synthesize speech with the bundled preset voice (`Emily.wav`):
-
-```bash
-curl -sS -X POST "$BASE_URL/v1/audio/speech" "${AUTH[@]}" \
-  -H "Content-Type: application/json" \
-  -d '{"model": "tts-1", "input": "Hello from Chatterbox on Nebius serverless.", "voice": "Emily.wav", "response_format": "wav"}' \
-  -o chatterbox-sample.wav
-```
+The second request in [Test request](#test-request) synthesizes speech with the bundled preset voice (`Emily.wav`).
 
 Optional fields: `voice` (bundled `*.wav` preset under `/app/voices`), `response_format`
 (`wav` or `mp3`). Use `voice: "default"` to skip reference audio and use Chatterbox's
@@ -159,6 +150,11 @@ export BASE_URL='https://…'   # Public endpoints URL from the console
 export TOKEN='<endpoint-auth-token>'   # generated in the create form (or printed once by the CLI)
 AUTH=(-H "Authorization: Bearer $TOKEN")   # AUTH=() if the endpoint has no auth
 curl -sS "${AUTH[@]}" "$BASE_URL/v1/models"
+
+curl -sS -X POST "$BASE_URL/v1/audio/speech" "${AUTH[@]}" \
+  -H "Content-Type: application/json" \
+  -d '{"model": "tts-1", "input": "Hello from Chatterbox on Nebius serverless.", "voice": "Emily.wav", "response_format": "wav"}' \
+  -o chatterbox-sample.wav
 ```
 
 Token auth is on by default for this template. Keep it on in production; the token is shown once at

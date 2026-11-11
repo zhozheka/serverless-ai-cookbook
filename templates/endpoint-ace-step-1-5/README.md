@@ -1,3 +1,13 @@
+---
+title: Ace-Step 1.5
+category: inference
+type: endpoint
+runtime: gpu-h100-sxm
+frameworks: [ace-step]
+keywords: [t2a, text-to-audio, music-generation, ace-step, openai-audio, h100]
+difficulty: intermediate
+---
+
 # ACE-Step 1.5
 
 <!-- factory:deploy -->
@@ -14,18 +24,6 @@ ACE-Step 1.5 is an MIT text-to-audio (music) model with a sync OpenAI-shaped gen
 
 <!-- /factory:intro -->
 
----
-
-title: Ace-Step 1.5
-category: inference
-type: endpoint
-runtime: gpu-h100-sxm
-frameworks: [ace-step]
-keywords: [t2a, text-to-audio, music-generation, ace-step, openai-audio, h100]
-difficulty: intermediate
-
----
-
 Text-to-audio (music) endpoint serving [ACE-Step 1.5](https://huggingface.co/ACE-Step/Ace-Step1.5)
 (ACE-Step) on a single preemptible H100. MIT license, no gated weights, and a
 catalog-friendly synchronous API on port 8000.
@@ -36,22 +34,7 @@ that blocks until audio is ready — similar to vLLM-Omni `/v1/videos/sync`.
 
 ## Run
 
-Generate a short instrumental clip (DiT-only, no LM “thinking” — faster smoke):
-
-```bash
-curl -sS -X POST "$BASE_URL/v1/audio/generations" "${AUTH[@]}" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "ACE-Step/Ace-Step1.5",
-    "prompt": "upbeat lo-fi drums with warm bass, instrumental",
-    "task_type": "text2music",
-    "thinking": false,
-    "audio_duration": 8,
-    "inference_steps": 8,
-    "audio_format": "mp3"
-  }' \
-  -o ace-step-sample.mp3
-```
+The second request in [Test request](#test-request) generates a short instrumental clip (DiT-only, no LM “thinking” — faster smoke).
 
 Optional fields: `lyrics`, `thinking` (set `true` for LM-enhanced quality),
 `audio_duration`, `inference_steps`, `audio_format` (`mp3` or `wav`), `bpm`,
@@ -168,6 +151,19 @@ export BASE_URL='https://…'   # Public endpoints URL from the console
 export TOKEN='<endpoint-auth-token>'   # generated in the create form (or printed once by the CLI)
 AUTH=(-H "Authorization: Bearer $TOKEN")   # AUTH=() if the endpoint has no auth
 curl -sS "${AUTH[@]}" "$BASE_URL/v1/models"
+
+curl -sS -X POST "$BASE_URL/v1/audio/generations" "${AUTH[@]}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "ACE-Step/Ace-Step1.5",
+    "prompt": "upbeat lo-fi drums with warm bass, instrumental",
+    "task_type": "text2music",
+    "thinking": false,
+    "audio_duration": 8,
+    "inference_steps": 8,
+    "audio_format": "mp3"
+  }' \
+  -o ace-step-sample.mp3
 ```
 
 Token auth is on by default for this template. Keep it on in production; the token is shown once at
