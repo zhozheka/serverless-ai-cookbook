@@ -44,6 +44,8 @@ def argon_gro() -> str:
 
 
 def default_inputs(steps: int, timestep_ps: float, temperature_k: float, seed: int) -> dict[str, str]:
+    # Lennard-Jones argon (sigma 0.3405 nm, epsilon 0.996 kJ/mol, comb-rule 2) on an FCC
+    # lattice in a 2.444 nm box: half the box exceeds the 0.8 nm cutoffs plus pair-list buffer.
     return {
         "mdp": f"""integrator = md
 nsteps = {steps}
